@@ -148,8 +148,14 @@ services:
       # SHARED SECRET VALUE
       JAVA_TOOL_OPTIONS: >-
         -Dalfresco.secureComms.secret=secret
+      SOLR_OPTS: >-
+        -javaagent:/opt/alfresco-search-services/opentelemetry-javaagent.jar
+        -Dotel.resource.attributes=service.name=alfresco-solr
+        -Dotel.exporter.otlp.endpoint=http://jaeger:4318
     ports:
       - "8083:8983" # Browser port
+    volumes:
+      - ./opentelemetry-javaagent.jar:/opt/alfresco-search-services/opentelemetry-javaagent.jar
   activemq:
     image: alfresco/alfresco-activemq:5.18-jre17-rockylinux8
     mem_limit: 1g
