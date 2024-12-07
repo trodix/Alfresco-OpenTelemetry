@@ -58,8 +58,8 @@ services:
       - "traefik.http.middlewares.acsfakeauth.basicauth.users=fake:"
       - "traefik.http.routers.solrapideny.middlewares=acsfakeauth@docker"
     volumes:
-      - ./catalina.policy:/usr/local/tomcat/conf/catalina.policy
-      - ./opentelemetry-javaagent.jar:/usr/local/tomcat/opentelemetry-javaagent.jar
+      - ./docker/alfresco-acs/catalina.policy:/usr/local/tomcat/conf/catalina.policy
+      - ./docker/opentelemetry-javaagent.jar:/usr/local/tomcat/opentelemetry-javaagent.jar
   transform-core-aio:
     image: alfresco/alfresco-transform-core-aio:5.1.5
     mem_limit: 1536m
@@ -113,8 +113,7 @@ services:
       - "traefik.http.middlewares.sharefakeauth.basicauth.users=fake:"
       - "traefik.http.routers.proxiedsolrapideny.middlewares=sharefakeauth@docker"
     volumes:
-      #- ./catalina.policy:/usr/local/tomcat/conf/catalina.policy
-      - ./opentelemetry-javaagent.jar:/usr/local/tomcat/opentelemetry-javaagent.jar
+      - ./docker/opentelemetry-javaagent.jar:/usr/local/tomcat/opentelemetry-javaagent.jar
   postgres:
     image: postgres:14.4
     mem_limit: 512m
@@ -155,7 +154,7 @@ services:
     ports:
       - "8083:8983" # Browser port
     volumes:
-      - ./opentelemetry-javaagent.jar:/opt/alfresco-search-services/opentelemetry-javaagent.jar
+      - ./docker/opentelemetry-javaagent.jar:/opt/alfresco-search-services/opentelemetry-javaagent.jar
   activemq:
     image: alfresco/alfresco-activemq:5.18-jre17-rockylinux8
     mem_limit: 1g
@@ -245,6 +244,22 @@ services:
       - label=disable # Required for accessing the Docker socket on Selinux enabled systems
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  springboot:
+    build: ./demo
+    ports:
+      - "8000:8000"
+    environment:
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: INFO
+      ALFRESCO_URL: "http://alfresco:8080/alfresco"
+      ALFRESCO_USERNAME: "admin"
+      ALFRESCO_PASSWORD: "admin"
+      JAVA_OPTS: >-
+        -javaagent:/opt/opentelemetry-javaagent.jar
+        -Dotel.resource.attributes=service.name=springboot-demo
+        -Dotel.exporter.otlp.endpoint=http://jaeger:4318
+    volumes:
+      - ./docker/opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
 
   jaeger:
     image: jaegertracing/all-in-one:1.55
