@@ -10,6 +10,6 @@ Stop all `./stop.sh`
 
 Show SpringBoot logs `./tail_logs`  
 
-Call the api `http ":8000/api/home"` 
+Call the api `http ":8080/myapp/api/home"` 
 
 Go to Jaeger `http://localhost:16686`  

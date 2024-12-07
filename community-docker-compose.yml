@@ -231,6 +231,8 @@ services:
       - "--providers.docker.exposedByDefault=false"
       - "--ping.entrypoint=web"
       - "--ping=true"
+      - "--tracing.otlp=true"
+      - "--tracing.otlp.http.endpoint=http://jaeger:4318/v1/traces"
     ports:
       - "8080:8080"
       - "8888:8888"
@@ -247,10 +249,8 @@ services:
 
   springboot:
     build: ./demo
-    ports:
-      - "8000:8000"
     environment:
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: INFO
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_CLIENT: DEBUG
       ALFRESCO_URL: "http://alfresco:8080/alfresco"
       ALFRESCO_USERNAME: "admin"
       ALFRESCO_PASSWORD: "admin"
@@ -260,6 +260,12 @@ services:
         -Dotel.exporter.otlp.endpoint=http://jaeger:4318
     volumes:
       - ./docker/opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.springboot.rule=PathPrefix(`/myapp`)"
+      - "traefik.http.services.springboot.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.springboot-stripprefix.stripprefix.prefixes=/myapp"
+      - "traefik.http.routers.springboot.middlewares=springboot-stripprefix"
 
   jaeger:
     image: jaegertracing/all-in-one:1.55
